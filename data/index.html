@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Split Flap Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Fonts & Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Flap<strong style="font-weight: 500">Control</strong></span>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <ul id="nav-menu">
+            <li class="active" data-target="home">
+              <i class="fa-solid fa-house"></i> Home
+            </li>
+            <li data-target="display">
+              <i class="fa-solid fa-tv"></i> Display
+            </li>
+            <li data-target="modules">
+              <i class="fa-solid fa-microchip"></i> Modules
+            </li>
+            <li data-target="animations">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Animations
+            </li>
+            <li data-target="presets">
+              <i class="fa-solid fa-bookmark"></i> Presets
+            </li>
+            <li data-target="scheduler">
+              <i class="fa-solid fa-calendar-days"></i> Scheduler
+            </li>
+            <li data-target="clock"><i class="fa-solid fa-clock"></i> Clock</li>
+            <li data-target="network">
+              <i class="fa-solid fa-wifi"></i> Network
+            </li>
+            <li data-target="diagnostics">
+              <i class="fa-solid fa-stethoscope"></i> Diagnostics
+            </li>
+            <li data-target="settings">
+              <i class="fa-solid fa-gear"></i> Settings
+            </li>
+          </ul>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="status-indicator">
+            <span class="dot online"></span> Connected
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="main-content">
+        <header class="topbar">
+          <h2 id="page-title">Dashboard Home</h2>
+          <div class="topbar-actions">
+            <button class="btn btn-outline">
+              <i class="fa-solid fa-rotate-right"></i> Sync
+            </button>
+            <button class="btn btn-primary">
+              <i class="fa-solid fa-power-off"></i> Reboot
+            </button>
+          </div>
+        </header>
+
+        <div class="content-area">
+          <!-- HOME VIEW -->
+          <section id="home" class="view active">
+            <div class="grid-container">
+              <!-- Premium Display Preview (Now takes full width) -->
+              <div class="card full-width">
+                <div class="card-header">
+                  <span
+                    ><i
+                      class="fa-solid fa-display"
+                      style="color: var(--accent-color); margin-right: 8px"
+                    ></i>
+                    Live Preview</span
+                  >
+                  <span class="badge">Online</span>
+                </div>
+
+                <div class="display-chassis">
+                  <div class="split-flap-mockup" id="flap-container">
+                    <div class="flap">
+                      H<span class="remove-module-btn" title="Remove"
+                        ><i class="fa-solid fa-minus"></i
+                      ></span>
+                    </div>
+                    <div class="flap">
+                      E<span class="remove-module-btn" title="Remove"
+                        ><i class="fa-solid fa-minus"></i
+                      ></span>
+                    </div>
+                    <div class="flap">
+                      L<span class="remove-module-btn" title="Remove"
+                        ><i class="fa-solid fa-minus"></i
+                      ></span>
+                    </div>
+                    <div class="flap">
+                      L<span class="remove-module-btn" title="Remove"
+                        ><i class="fa-solid fa-minus"></i
+                      ></span>
+                    </div>
+                    <div class="flap">
+                      O<span class="remove-module-btn" title="Remove"
+                        ><i class="fa-solid fa-minus"></i
+                      ></span>
+                    </div>
+
+                    <!-- Add Module Button -->
+                    <button class="add-module-btn" title="Add Module">
+                      <i class="fa-solid fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- DISPLAY VIEW -->
+          <section id="display" class="view">
+            <div class="card full-width">
+              <div class="card-header">Display Message</div>
+              <p style="font-weight: 300">
+                Send immediate text to the split flap display.
+              </p>
+              <div class="input-group" style="margin-top: 15px">
+                <input
+                  type="text"
+                  placeholder="ENTER TEXT HERE..."
+                  class="text-input"
+                />
+                <button class="btn btn-primary">Send</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Placeholder for other views -->
+          <section id="modules" class="view">
+            <div class="card">
+              <h3>Modules Management</h3>
+              <p>Configure individual flap modules here.</p>
+            </div>
+          </section>
+          <section id="animations" class="view">
+            <div class="card">
+              <h3>Animations</h3>
+              <p>Setup cascading effects and wave animations.</p>
+            </div>
+          </section>
+          <section id="presets" class="view">
+            <div class="card">
+              <h3>Saved Presets</h3>
+              <p>Load saved messages and states.</p>
+            </div>
+          </section>
+          <section id="scheduler" class="view">
+            <div class="card">
+              <h3>Scheduler</h3>
+              <p>Automate messages based on time of day.</p>
+            </div>
+          </section>
+          <section id="clock" class="view">
+            <div class="card">
+              <h3>Clock Settings</h3>
+              <p>Configure timezones and NTP servers.</p>
+            </div>
+          </section>
+          <section id="network" class="view">
+            <div class="card">
+              <h3>Network</h3>
+              <p>Wi-Fi, IP, and MQTT broker settings.</p>
+            </div>
+          </section>
+          <section id="diagnostics" class="view">
+            <div class="card">
+              <h3>Diagnostics</h3>
+              <p>Run hardware tests on individual motors and sensors.</p>
+            </div>
+          </section>
+          <section id="settings" class="view">
+            <div class="card">
+              <h3>System Settings</h3>
+              <p>Firmware updates and general configuration.</p>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
