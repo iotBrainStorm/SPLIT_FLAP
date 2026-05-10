@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Split Flap Dashboard</title>
     <link rel="stylesheet" href="styles.css" />
-    <!-- Fonts & Icons -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap"
       rel="stylesheet"
     />
     <link
@@ -15,11 +14,22 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
   </head>
-  <body>
+  <body data-theme="dark">
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
     <div class="dashboard-container">
+      <!-- Mobile Header -->
+      <div class="mobile-header">
+        <div class="logo">
+          <i class="fa-solid fa-layer-group"></i> Flap<strong>Control</strong>
+        </div>
+        <button id="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
+      </div>
+
       <!-- Sidebar Navigation -->
-      <aside class="sidebar">
-        <div class="sidebar-header">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header desktop-only">
           <div class="logo">
             <i class="fa-solid fa-layer-group"></i>
             <span>Flap<strong style="font-weight: 500">Control</strong></span>
@@ -58,8 +68,9 @@
           </ul>
         </nav>
         <div class="sidebar-footer">
-          <div class="status-indicator">
-            <span class="dot online"></span> Connected
+          <div class="ws-status">
+            <span class="dot online" id="ws-indicator"></span>
+            <span id="ws-text">WS Connected</span>
           </div>
         </div>
       </aside>
@@ -67,137 +78,852 @@
       <!-- Main Content Area -->
       <main class="main-content">
         <header class="topbar">
-          <h2 id="page-title">Dashboard Home</h2>
+          <h2 id="page-title" style="font-weight: 300">Dashboard Home</h2>
           <div class="topbar-actions">
-            <button class="btn btn-outline">
+            <button
+              class="btn btn-outline"
+              onclick="app.showToast('Syncing parameters...', 'info')"
+            >
               <i class="fa-solid fa-rotate-right"></i> Sync
             </button>
-            <button class="btn btn-primary">
+            <button
+              class="btn btn-primary"
+              onclick="app.showToast('Rebooting ESP32...', 'warning')"
+            >
               <i class="fa-solid fa-power-off"></i> Reboot
             </button>
           </div>
         </header>
 
         <div class="content-area">
-          <!-- HOME VIEW -->
+          <!-- ================= HOME PAGE ================= -->
           <section id="home" class="view active">
             <div class="grid-container">
-              <!-- Premium Display Preview (Now takes full width) -->
+              <!-- Live Virtual Preview -->
               <div class="card full-width">
                 <div class="card-header">
                   <span
-                    ><i
-                      class="fa-solid fa-display"
-                      style="color: var(--accent-color); margin-right: 8px"
-                    ></i>
-                    Live Preview</span
+                    ><i class="fa-solid fa-display"></i> Live Virtual
+                    Preview</span
                   >
-                  <span class="badge">Online</span>
+                  <span class="badge">8 Modules Active</span>
                 </div>
-
                 <div class="display-chassis">
-                  <div class="split-flap-mockup" id="flap-container">
-                    <div class="flap">
-                      H<span class="remove-module-btn" title="Remove"
-                        ><i class="fa-solid fa-minus"></i
-                      ></span>
-                    </div>
-                    <div class="flap">
-                      E<span class="remove-module-btn" title="Remove"
-                        ><i class="fa-solid fa-minus"></i
-                      ></span>
-                    </div>
-                    <div class="flap">
-                      L<span class="remove-module-btn" title="Remove"
-                        ><i class="fa-solid fa-minus"></i
-                      ></span>
-                    </div>
-                    <div class="flap">
-                      L<span class="remove-module-btn" title="Remove"
-                        ><i class="fa-solid fa-minus"></i
-                      ></span>
-                    </div>
-                    <div class="flap">
-                      O<span class="remove-module-btn" title="Remove"
-                        ><i class="fa-solid fa-minus"></i
-                      ></span>
-                    </div>
+                  <div class="split-flap-mockup" id="main-flaps">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+                <div class="quick-actions" style="margin-top: 20px">
+                  <button class="btn btn-outline" onclick="app.testFlip()">
+                    <i class="fa-solid fa-play"></i> Test Flip
+                  </button>
+                  <button class="btn btn-outline">
+                    <i class="fa-solid fa-house-chimney"></i> Home All
+                  </button>
+                  <button
+                    class="btn btn-outline"
+                    style="color: #ef4444; border-color: #ef4444"
+                  >
+                    <i class="fa-solid fa-stop"></i> Stop All
+                  </button>
+                  <button class="btn btn-outline">
+                    <i class="fa-solid fa-eraser"></i> Clear
+                  </button>
+                </div>
+              </div>
 
-                    <!-- Add Module Button -->
-                    <button class="add-module-btn" title="Add Module">
-                      <i class="fa-solid fa-plus"></i>
-                    </button>
+              <div class="card">
+                <div class="card-header">System Status</div>
+                <div class="stat">
+                  <span class="stat-label">Message</span
+                  ><span class="stat-value text-accent" id="current-msg-stat"
+                    >FLIGHTS</span
+                  >
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Uptime</span
+                  ><span class="stat-value">12d 4h 32m</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Power Draw</span
+                  ><span class="stat-value">18.2W</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Errors</span
+                  ><span class="stat-value" style="color: #10b981">0</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">ESP32 & WiFi</div>
+                <div class="stat">
+                  <span class="stat-label">SSID</span
+                  ><span class="stat-value">Airport_IoT</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Signal (RSSI)</span
+                  ><span class="stat-value">-54 dBm</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">IP Address</span
+                  ><span class="stat-value">192.168.1.42</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Free Heap</span
+                  ><span class="stat-value">124 KB</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">Current Task</div>
+                <div class="stat">
+                  <span class="stat-label">Mode</span
+                  ><span class="stat-value">Static</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Animation</span
+                  ><span class="stat-value">Airport Roll</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Next Event</span
+                  ><span class="stat-value">None</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Motor State</span
+                  ><span class="stat-value">Idle</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================= DISPLAY PAGE ================= -->
+          <section id="display" class="view">
+            <div class="grid-container">
+              <div class="card full-width">
+                <div class="card-header">Send Message</div>
+                <div class="input-group" style="margin-bottom: 20px">
+                  <input
+                    type="text"
+                    id="display-input"
+                    placeholder="ENTER 8-CHAR TEXT..."
+                    class="text-input"
+                    maxlength="8"
+                  />
+                </div>
+                <div class="quick-actions">
+                  <button
+                    class="btn btn-primary"
+                    onclick="app.sendMessage(false)"
+                  >
+                    <i class="fa-solid fa-paper-plane"></i> Send
+                  </button>
+                  <button
+                    class="btn btn-outline"
+                    onclick="app.sendMessage(true)"
+                  >
+                    <i class="fa-solid fa-wand-magic"></i> Animated Send
+                  </button>
+                  <button class="btn btn-outline">
+                    <i class="fa-solid fa-bolt"></i> Instant Update
+                  </button>
+                  <button class="btn btn-outline">
+                    <i class="fa-solid fa-eraser"></i> Clear
+                  </button>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">Display Modes</div>
+                <div class="form-group">
+                  <label
+                    ><input type="radio" name="mode" checked /> Static</label
+                  >
+                </div>
+                <div class="form-group">
+                  <label><input type="radio" name="mode" /> Scroll</label>
+                </div>
+                <div class="form-group">
+                  <label><input type="radio" name="mode" /> Rotate Pages</label>
+                </div>
+                <div class="form-group">
+                  <label><input type="radio" name="mode" /> Clock Mode</label>
+                </div>
+                <div class="form-group">
+                  <label><input type="radio" name="mode" /> Random</label>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">Formatting</div>
+                <p class="stat-label">Alignment</p>
+                <div class="button-group" style="margin-bottom: 15px">
+                  <button class="btn btn-outline active">Left</button>
+                  <button class="btn btn-outline">Center</button>
+                  <button class="btn btn-outline">Right</button>
+                </div>
+                <p class="stat-label">Settings</p>
+                <div class="form-group">
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="slider"
+                    ></span>
+                    Uppercase Only</label
+                  >
+                </div>
+                <div class="form-group">
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="slider"
+                    ></span>
+                    Allow Numbers</label
+                  >
+                </div>
+                <div class="form-group">
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="slider"
+                    ></span>
+                    Allow Symbols</label
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================= MODULES PAGE ================= -->
+          <section id="modules" class="view">
+            <div class="card full-width" style="margin-bottom: 20px">
+              <div class="card-header">Modules Overview</div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Mod #</th>
+                      <th>Char</th>
+                      <th>Pos</th>
+                      <th>Sensor</th>
+                      <th>Motor</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="module-table-body">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="grid-container">
+              <div class="card col-span-2">
+                <div class="card-header">Global Motor & Sensor Settings</div>
+                <div class="grid-2">
+                  <div>
+                    <label class="stat-label">Global Speed (RPM)</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value="75"
+                      class="range-slider"
+                    />
+                    <label class="stat-label" style="margin-top: 15px"
+                      >Global PWM Limit</label
+                    >
+                    <input
+                      type="range"
+                      min="0"
+                      max="255"
+                      value="200"
+                      class="range-slider"
+                    />
+                  </div>
+                  <div>
+                    <div class="form-group">
+                      <label class="toggle"
+                        ><input type="checkbox" checked /><span
+                          class="slider"
+                        ></span>
+                        Auto-Calibration</label
+                      >
+                    </div>
+                    <div class="form-group">
+                      <label class="toggle"
+                        ><input type="checkbox" /><span class="slider"></span>
+                        Reverse Direction</label
+                      >
+                    </div>
+                    <label class="stat-label" style="margin-top: 15px"
+                      >Debounce Time (ms)</label
+                    >
+                    <input
+                      type="number"
+                      value="10"
+                      class="text-input"
+                      style="width: 100px"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">Hardware Tests</div>
+                <button
+                  class="btn btn-outline full-w"
+                  style="margin-bottom: 10px"
+                >
+                  Flip Test All
+                </button>
+                <button
+                  class="btn btn-outline full-w"
+                  style="margin-bottom: 10px"
+                >
+                  Sequential Cascade
+                </button>
+                <button
+                  class="btn btn-outline full-w"
+                  style="margin-bottom: 10px"
+                >
+                  Continuous Rotation
+                </button>
+                <button
+                  class="btn btn-outline full-w"
+                  style="color: #ef4444; border-color: #ef4444"
+                >
+                  Stress Test
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================= ANIMATIONS PAGE ================= -->
+          <section id="animations" class="view">
+            <div class="grid-container">
+              <div class="card">
+                <div class="card-header">Animation Style</div>
+                <div class="form-group">
+                  <label
+                    ><input type="radio" name="anim" checked /> Airport
+                    Roll</label
+                  >
+                </div>
+                <div class="form-group">
+                  <label
+                    ><input type="radio" name="anim" /> Cascade L-to-R</label
+                  >
+                </div>
+                <div class="form-group">
+                  <label
+                    ><input type="radio" name="anim" /> Cascade R-to-L</label
+                  >
+                </div>
+                <div class="form-group">
+                  <label><input type="radio" name="anim" /> Wave</label>
+                </div>
+                <div class="form-group">
+                  <label><input type="radio" name="anim" /> Typewriter</label>
+                </div>
+                <div class="form-group">
+                  <label
+                    ><input type="radio" name="anim" /> Random Flurry</label
+                  >
+                </div>
+                <div class="form-group">
+                  <label
+                    ><input type="radio" name="anim" /> Instant (No Anim)</label
+                  >
+                </div>
+              </div>
+              <div class="card col-span-2">
+                <div class="card-header">Animation Parameters</div>
+                <label class="stat-label">Transition Speed</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value="5"
+                  class="range-slider"
+                />
+
+                <label class="stat-label" style="margin-top: 20px"
+                  >Cascade Delay (ms)</label
+                >
+                <input
+                  type="range"
+                  min="0"
+                  max="500"
+                  value="150"
+                  class="range-slider"
+                />
+
+                <hr
+                  style="
+                    border: 0;
+                    border-top: 1px solid var(--border-color);
+                    margin: 20px 0;
+                  "
+                />
+
+                <div class="grid-2">
+                  <div>
+                    <p class="stat-label" style="margin-bottom: 10px">
+                      Idle Behavior
+                    </p>
+                    <select class="text-input select-input">
+                      <option>None (Static)</option>
+                      <option>Occasional Flap Drop</option>
+                      <option>Clock Every Minute</option>
+                    </select>
+                  </div>
+                  <div>
+                    <p class="stat-label" style="margin-bottom: 10px">
+                      Sound Sync
+                    </p>
+                    <div class="form-group">
+                      <label class="toggle"
+                        ><input type="checkbox" checked /><span
+                          class="slider"
+                        ></span>
+                        Sync Buzzer to Flaps</label
+                      >
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- DISPLAY VIEW -->
-          <section id="display" class="view">
+          <!-- ================= PRESETS PAGE ================= -->
+          <section id="presets" class="view">
             <div class="card full-width">
-              <div class="card-header">Display Message</div>
-              <p style="font-weight: 300">
-                Send immediate text to the split flap display.
-              </p>
-              <div class="input-group" style="margin-top: 15px">
-                <input
-                  type="text"
-                  placeholder="ENTER TEXT HERE..."
-                  class="text-input"
-                />
-                <button class="btn btn-primary">Send</button>
+              <div class="card-header">
+                <span>Saved Presets</span>
+                <div class="topbar-actions">
+                  <button class="btn btn-outline btn-sm">
+                    <i class="fa-solid fa-upload"></i> Import
+                  </button>
+                  <button class="btn btn-outline btn-sm">
+                    <i class="fa-solid fa-download"></i> Export
+                  </button>
+                </div>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Message</th>
+                      <th>Category</th>
+                      <th>Animation</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Morning Greet</td>
+                      <td class="text-accent">GOOD MRN</td>
+                      <td>Greeting</td>
+                      <td>Airport Roll</td>
+                      <td>
+                        <button class="btn btn-primary btn-sm">Load</button>
+                        <button
+                          class="btn btn-outline btn-sm"
+                          style="color: #ef4444"
+                        >
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Error State</td>
+                      <td class="text-accent">ERROR 404</td>
+                      <td>Warning</td>
+                      <td>Blink</td>
+                      <td>
+                        <button class="btn btn-primary btn-sm">Load</button>
+                        <button
+                          class="btn btn-outline btn-sm"
+                          style="color: #ef4444"
+                        >
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Departures</td>
+                      <td class="text-accent">DEPARTED</td>
+                      <td>Status</td>
+                      <td>Cascade</td>
+                      <td>
+                        <button class="btn btn-primary btn-sm">Load</button>
+                        <button
+                          class="btn btn-outline btn-sm"
+                          style="color: #ef4444"
+                        >
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </section>
 
-          <!-- Placeholder for other views -->
-          <section id="modules" class="view">
-            <div class="card">
-              <h3>Modules Management</h3>
-              <p>Configure individual flap modules here.</p>
-            </div>
-          </section>
-          <section id="animations" class="view">
-            <div class="card">
-              <h3>Animations</h3>
-              <p>Setup cascading effects and wave animations.</p>
-            </div>
-          </section>
-          <section id="presets" class="view">
-            <div class="card">
-              <h3>Saved Presets</h3>
-              <p>Load saved messages and states.</p>
-            </div>
-          </section>
+          <!-- ================= SCHEDULER PAGE ================= -->
           <section id="scheduler" class="view">
-            <div class="card">
-              <h3>Scheduler</h3>
-              <p>Automate messages based on time of day.</p>
+            <div class="card full-width">
+              <div class="card-header">
+                <div class="form-group" style="margin: 0">
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="slider"
+                    ></span>
+                    Enable Scheduler</label
+                  >
+                </div>
+                <button class="btn btn-primary btn-sm">
+                  <i class="fa-solid fa-plus"></i> Add Event
+                </button>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Message</th>
+                      <th>Animation</th>
+                      <th>Repeat</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>08:00 AM</td>
+                      <td class="text-accent">WAKE UP!</td>
+                      <td>Airport Roll</td>
+                      <td>Daily</td>
+                      <td>
+                        <button class="btn btn-outline btn-sm">
+                          <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button
+                          class="btn btn-outline btn-sm"
+                          style="color: #ef4444"
+                        >
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>12:00 PM</td>
+                      <td class="text-accent">12:00 PM</td>
+                      <td>Instant</td>
+                      <td>Daily</td>
+                      <td>
+                        <button class="btn btn-outline btn-sm">
+                          <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button
+                          class="btn btn-outline btn-sm"
+                          style="color: #ef4444"
+                        >
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
+
+          <!-- ================= CLOCK PAGE ================= -->
           <section id="clock" class="view">
-            <div class="card">
-              <h3>Clock Settings</h3>
-              <p>Configure timezones and NTP servers.</p>
+            <div class="grid-container">
+              <div class="card col-span-2" style="text-align: center">
+                <div class="card-header" style="text-align: left">
+                  Clock Preview
+                </div>
+                <div class="clock-display" id="live-clock">10:13 PM</div>
+                <p class="stat-label">Asia/Calcutta</p>
+              </div>
+              <div class="card">
+                <div class="card-header">Clock Settings</div>
+                <div class="form-group">
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="slider"
+                    ></span>
+                    Enable Clock Mode</label
+                  >
+                </div>
+                <hr
+                  style="
+                    border: 0;
+                    border-top: 1px solid var(--border-color);
+                    margin: 15px 0;
+                  "
+                />
+                <p class="stat-label">Format</p>
+                <div class="button-group" style="margin-bottom: 15px">
+                  <button class="btn btn-outline active">12H</button>
+                  <button class="btn btn-outline">24H</button>
+                </div>
+                <p class="stat-label">Timezone</p>
+                <select
+                  class="text-input select-input"
+                  style="margin-bottom: 15px"
+                >
+                  <option>Asia/Calcutta (UTC+5:30)</option>
+                  <option>UTC</option>
+                  <option>America/New_York (UTC-5)</option>
+                </select>
+                <button class="btn btn-outline full-w">
+                  <i class="fa-solid fa-rotate"></i> Sync NTP Now
+                </button>
+              </div>
             </div>
           </section>
+
+          <!-- ================= NETWORK PAGE ================= -->
           <section id="network" class="view">
-            <div class="card">
-              <h3>Network</h3>
-              <p>Wi-Fi, IP, and MQTT broker settings.</p>
+            <div class="grid-container">
+              <div class="card">
+                <div class="card-header">WiFi Configuration</div>
+                <div class="form-group">
+                  <label class="toggle"
+                    ><input type="checkbox" /><span class="slider"></span>
+                    Enable AP Mode</label
+                  >
+                </div>
+                <input
+                  type="text"
+                  placeholder="SSID"
+                  class="text-input"
+                  style="margin-bottom: 10px; width: 100%"
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  class="text-input"
+                  style="margin-bottom: 15px; width: 100%"
+                />
+                <div class="quick-actions">
+                  <button class="btn btn-primary" style="flex: 1">
+                    Connect
+                  </button>
+                  <button class="btn btn-outline" style="flex: 1">
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">Network IP Settings</div>
+                <div class="form-group">
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="slider"
+                    ></span>
+                    DHCP (Auto IP)</label
+                  >
+                </div>
+                <input
+                  type="text"
+                  placeholder="Hostname (e.g. flap-display)"
+                  class="text-input"
+                  value="flap-display"
+                  style="margin-bottom: 10px; width: 100%"
+                />
+                <input
+                  type="text"
+                  placeholder="Static IP"
+                  class="text-input"
+                  disabled
+                  style="margin-bottom: 10px; width: 100%; opacity: 0.5"
+                />
+                <button class="btn btn-outline full-w">
+                  Save IP Configuration
+                </button>
+              </div>
+              <div class="card">
+                <div class="card-header">Ping Monitor</div>
+                <div class="stat">
+                  <span class="stat-label">Gateway</span
+                  ><span class="stat-value">192.168.1.1</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Google DNS</span
+                  ><span class="stat-value" style="color: #10b981">12ms</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">NTP Server</span
+                  ><span class="stat-value" style="color: #10b981">45ms</span>
+                </div>
+              </div>
             </div>
           </section>
+
+          <!-- ================= DIAGNOSTICS PAGE ================= -->
           <section id="diagnostics" class="view">
-            <div class="card">
-              <h3>Diagnostics</h3>
-              <p>Run hardware tests on individual motors and sensors.</p>
+            <div class="grid-container">
+              <div class="card col-span-2">
+                <div class="card-header">Live System Terminal</div>
+                <div class="terminal" id="sys-terminal">
+                  [10:13:00] [SYS] Booting ESP32 Split Flap Controller...<br />
+                  [10:13:01] [WIFI] Connected to Airport_IoT (IP:
+                  192.168.1.42)<br />
+                  [10:13:02] [NTP] Time synced successfully.<br />[10:13:05]
+                  [MOT] Homing all 8 modules...<br />[10:13:12] [MOT] Homing
+                  complete. Zero errors.<br />[10:15:22] [WS] Web client
+                  connected.<br />
+                  <span class="cursor">_</span>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">Recovery Tools</div>
+                <button
+                  class="btn btn-outline full-w"
+                  style="margin-bottom: 10px"
+                >
+                  <i class="fa-solid fa-house-chimney"></i> Rehome Sequence
+                </button>
+                <button
+                  class="btn btn-outline full-w"
+                  style="margin-bottom: 10px"
+                >
+                  <i class="fa-solid fa-eraser"></i> Clear Error Logs
+                </button>
+                <button
+                  class="btn btn-outline full-w"
+                  style="
+                    margin-bottom: 10px;
+                    color: #f5a623;
+                    border-color: #f5a623;
+                  "
+                >
+                  <i class="fa-solid fa-shield-halved"></i> Boot Safe Mode
+                </button>
+                <hr
+                  style="
+                    border: 0;
+                    border-top: 1px solid var(--border-color);
+                    margin: 15px 0;
+                  "
+                />
+                <div class="stat">
+                  <span class="stat-label">Core Temp</span
+                  ><span class="stat-value">42°C</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">CPU Usage</span
+                  ><span class="stat-value">14%</span>
+                </div>
+              </div>
             </div>
           </section>
+
+          <!-- ================= SETTINGS PAGE ================= -->
           <section id="settings" class="view">
-            <div class="card">
-              <h3>System Settings</h3>
-              <p>Firmware updates and general configuration.</p>
+            <div class="grid-container">
+              <div class="card">
+                <div class="card-header">Appearance</div>
+                <p class="stat-label" style="margin-bottom: 10px">
+                  Dashboard Theme
+                </p>
+                <div class="button-group" style="margin-bottom: 20px">
+                  <button
+                    class="btn btn-outline active"
+                    onclick="app.setTheme('dark')"
+                  >
+                    Dark
+                  </button>
+                  <button
+                    class="btn btn-outline"
+                    onclick="app.setTheme('light')"
+                  >
+                    Light
+                  </button>
+                  <button
+                    class="btn btn-outline"
+                    onclick="app.setTheme('amber')"
+                  >
+                    Amber
+                  </button>
+                </div>
+                <p class="stat-label" style="margin-bottom: 10px">
+                  Hardware Sounds
+                </p>
+                <div class="form-group">
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="slider"
+                    ></span>
+                    Enable Buzzer Beeps</label
+                  >
+                </div>
+                <div class="form-group">
+                  <label class="toggle"
+                    ><input type="checkbox" checked /><span
+                      class="slider"
+                    ></span>
+                    UI Click Sounds</label
+                  >
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">Startup Profile</div>
+                <input
+                  type="text"
+                  placeholder="Startup Message"
+                  class="text-input"
+                  value="READY..."
+                  style="margin-bottom: 10px; width: 100%"
+                />
+                <select
+                  class="text-input select-input"
+                  style="margin-bottom: 15px; width: 100%"
+                >
+                  <option>Airport Roll Animation</option>
+                  <option>Instant Show</option>
+                </select>
+                <div class="form-group">
+                  <label class="toggle"
+                    ><input type="checkbox" /><span class="slider"></span>
+                    Auto-start Clock Mode</label
+                  >
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">System & Firmware</div>
+                <div class="stat">
+                  <span class="stat-label">Current Firmware</span
+                  ><span class="stat-value">v2.4.1</span>
+                </div>
+                <button
+                  class="btn btn-primary full-w"
+                  style="margin-top: 10px; margin-bottom: 10px"
+                >
+                  <i class="fa-solid fa-cloud-arrow-up"></i> OTA Update
+                </button>
+                <div class="quick-actions">
+                  <button class="btn btn-outline" style="flex: 1">
+                    Backup
+                  </button>
+                  <button class="btn btn-outline" style="flex: 1">
+                    Restore
+                  </button>
+                </div>
+                <button
+                  class="btn btn-outline full-w"
+                  style="
+                    margin-top: 15px;
+                    color: #ef4444;
+                    border-color: #ef4444;
+                  "
+                >
+                  <i class="fa-solid fa-triangle-exclamation"></i> Factory Reset
+                </button>
+              </div>
             </div>
           </section>
         </div>
